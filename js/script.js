@@ -113,9 +113,12 @@ if (!reduceMotion && window.matchMedia("(hover: hover)").matches) {
 }
 
 // ===== Ant colony — ants wander, find food, carry crumbs home to the nest =====
-(function antColony() {
+const colony = (function antColony() {
   const box = document.getElementById("ants");
-  if (!box || reduceMotion) return;
+  if (!box || reduceMotion) return null;
+
+  // Story hooks: in "scout" mode only the scout ant (or food the visitor drops) is pursued
+  const story = { mode: "all", scout: null, onPickup: null, onDeliver: null };
 
   const NS = "http://www.w3.org/2000/svg";
   const rand = (a, b) => a + Math.random() * (b - a);
@@ -160,14 +163,25 @@ if (!reduceMotion && window.matchMedia("(hover: hover)").matches) {
 
   // --- Food ---
   const foods = [];
-  function addFood(x, y) {
+  function addFood(x, y, byUser = false, nearNest = false) {
     if (x == null) {
       let tries = 0;
       do {
-        x = rand(40, W - 40);
-        y = rand(70, H - 50);
+        if (nearNest) {
+          // a pile a short walk from the nest, up and to the right
+          const th = rand(-Math.PI / 2, 0);
+          const r = rand(200, 320);
+          x = Math.min(W - 40, Math.max(40, nest.x + Math.cos(th) * r));
+          y = Math.min(H - 50, Math.max(70, nest.y + Math.sin(th) * r));
+        } else {
+          x = rand(40, W - 40);
+          y = rand(70, H - 50);
+        }
         tries++;
-      } while ((blocked(x, y) || Math.hypot(x - nest.x, y - nest.y) < Math.min(W, H) * 0.3) && tries < 40);
+      } while (
+        (blocked(x, y) || (!nearNest && Math.hypot(x - nest.x, y - nest.y) < Math.min(W, H) * 0.3)) &&
+        tries < 40
+      );
     }
     const el = document.createElement("div");
     el.className = "food";
@@ -179,9 +193,11 @@ if (!reduceMotion && window.matchMedia("(hover: hover)").matches) {
       el.appendChild(c);
     }
     box.appendChild(el);
-    foods.push({ x, y, amount, el });
+    const food = { x, y, amount, el, byUser };
+    foods.push(food);
     // Too much food on screen? Remove the oldest pile.
     if (foods.length > MAX_FOOD + 2) removeFood(foods[0]);
+    return food;
   }
   function removeFood(f) {
     const i = foods.indexOf(f);
@@ -237,6 +253,7 @@ if (!reduceMotion && window.matchMedia("(hover: hover)").matches) {
     let best = null;
     let bd = radius;
     for (const f of foods) {
+      if (story.mode === "scout" && a !== story.scout && !f.byUser) continue;
       const d = Math.hypot(f.x - a.x, f.y - a.y);
       if (d < bd) {
         bd = d;
@@ -286,6 +303,7 @@ if (!reduceMotion && window.matchMedia("(hover: hover)").matches) {
             a.target = null;
             a.el.classList.add("carrying");
             setRest(a, 18); // pause to pick it up
+            story.onPickup?.(a);
           }
         }
       } else if (a.state === "carry") {
@@ -306,6 +324,7 @@ if (!reduceMotion && window.matchMedia("(hover: hover)").matches) {
           a.angle += Math.PI + rand(-0.8, 0.8); // turn around, head back out
           desired = a.angle;
           setRest(a, 20);
+          story.onDeliver?.(a);
         }
       }
 
@@ -328,7 +347,7 @@ if (!reduceMotion && window.matchMedia("(hover: hover)").matches) {
       }
 
       a.angle = desired % TAU;
-      const busy = a.state !== "wander" ? 1.15 : 1;
+      const busy = (a.state !== "wander" ? 1.15 : 1) * (a === story.scout && story.mode === "scout" ? 1.6 : 1);
       const target = a.rest > 0 ? 0 : a.baseSpeed * busy * (1 + a.fear * 2.5);
       a.speed += (target - a.speed) * 0.15;
       a.x = Math.max(-10, Math.min(W + 10, a.x + Math.cos(a.angle) * a.speed * dt));
@@ -359,12 +378,12 @@ if (!reduceMotion && window.matchMedia("(hover: hover)").matches) {
   // Click / tap anywhere (except buttons & links) to drop food
   window.addEventListener("pointerdown", (e) => {
     if (e.target.closest("button, a")) return;
-    addFood(e.clientX, e.clientY);
+    addFood(e.clientX, e.clientY, true);
   });
 
-  // Food keeps appearing on its own
+  // Food keeps appearing on its own (the story controls food during the scout scene)
   setInterval(() => {
-    if (!document.hidden && foods.length < MAX_FOOD) addFood();
+    if (!document.hidden && story.mode !== "scout" && foods.length < MAX_FOOD) addFood();
   }, 4500);
 
   function layout() {
@@ -376,13 +395,130 @@ if (!reduceMotion && window.matchMedia("(hover: hover)").matches) {
   }
   layout();
   window.addEventListener("resize", layout);
-  setTimeout(() => {
-    measure(); // after entrance animations settle
-    addFood();
-    addFood();
-  }, 1600);
+  setTimeout(measure, 1600); // after entrance animations settle
 
   requestAnimationFrame(step);
+
+  return {
+    story,
+    ants,
+    foods,
+    addFood: () => addFood(),
+    addFoodNearNest: () => addFood(null, null, false, true),
+    clearAutoFood() {
+      [...foods].forEach((f) => !f.byUser && removeFood(f));
+    },
+    sendTo(a, food) {
+      a.state = "seek";
+      a.target = food;
+      setRest(a, 0);
+    },
+  };
+})();
+
+// ===== The story — captions narrate what the ants are actually doing =====
+(function antStory() {
+  const box = document.getElementById("story");
+  const textEl = document.getElementById("story-text");
+  const stepEl = document.getElementById("story-step");
+  const title = document.querySelector(".brand-wave");
+  if (!box || !colony) return;
+
+  const LINES = [
+    "One small ant sets out to explore…",
+    "It finds something worth sharing.",
+    "Soon, the whole colony joins in.",
+    "Together, small ants make a big wave.",
+    "Ants Wave — launching 1 Dec 2026.",
+  ];
+  const { story, ants } = colony;
+  let timers = [];
+  const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+  const clearTimers = () => {
+    timers.forEach(clearTimeout);
+    timers = [];
+  };
+
+  function say(i) {
+    box.classList.remove("show");
+    setTimeout(() => {
+      stepEl.textContent = `${i + 1}/${LINES.length}`;
+      textEl.textContent = LINES[i];
+      box.classList.add("show");
+    }, 450);
+  }
+
+  let scene = -1;
+  let scoutHome = false;
+  function go(n) {
+    if (scene === n) return;
+    scene = n;
+    clearTimers();
+
+    if (n === 0) {
+      // Scene 1: a lone scout explores
+      story.mode = "scout";
+      scoutHome = false;
+      colony.clearAutoFood();
+      const food = colony.addFoodNearNest();
+      // the free ant closest to the food becomes the scout
+      const free = ants.filter((a) => a.state === "wander");
+      const pool = free.length ? free : ants;
+      const dist = (a) => Math.hypot(a.x - food.x, a.y - food.y);
+      story.scout = pool.reduce((best, a) => (dist(a) < dist(best) ? a : best));
+      ants.forEach((a) => a.el.classList.toggle("hero", a === story.scout));
+      say(0);
+      later(() => colony.sendTo(story.scout, food), 1500);
+      later(() => go(1), 18000); // fallback if the scout gets distracted
+    } else if (n === 1) {
+      // Scene 2: the scout found food and heads home
+      say(1);
+      later(() => go(2), scoutHome ? MIN_SCENE : 15000); // already home? move on after the caption is read
+    } else if (n === 2) {
+      // Scene 3: everyone joins
+      story.mode = "all";
+      story.scout?.el.classList.remove("hero");
+      say(2);
+      colony.addFood();
+      colony.addFood();
+      later(() => go(3), 8000);
+    } else if (n === 3) {
+      // Scene 4: together → big wave
+      say(3);
+      title?.classList.add("glow");
+      later(() => title?.classList.remove("glow"), 3000);
+      later(() => go(4), 7000);
+    } else if (n === 4) {
+      // Scene 5: the launch
+      say(4);
+      later(() => box.classList.remove("show"), 6500);
+      later(() => go(0), 10000);
+    }
+  }
+
+  // Each caption stays readable for at least this long, even if the ants are quick
+  const MIN_SCENE = 4500;
+  let sceneStart = 0;
+  const _go = go;
+  go = (n) => {
+    sceneStart = performance.now();
+    _go(n);
+  };
+  const advance = (from, to) => {
+    const wait = Math.max(0, MIN_SCENE - (performance.now() - sceneStart));
+    setTimeout(() => scene === from && go(to), wait);
+  };
+
+  story.onPickup = (a) => {
+    if (scene === 0 && a === story.scout) advance(0, 1);
+  };
+  story.onDeliver = (a) => {
+    if (a !== story.scout || story.mode !== "scout") return;
+    scoutHome = true;
+    if (scene === 1) advance(1, 2);
+  };
+
+  setTimeout(() => go(0), 2400); // start after the entrance animation
 })();
 
 // ===== Ants Wave — a 3D field of tiny "ants" (particles) moving as one wave =====

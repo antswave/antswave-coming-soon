@@ -150,7 +150,27 @@ body {
   0%  { opacity: 1; }
   50% { opacity: 0; }
 }
+.walker.hero {
+  filter: drop-shadow(0 0 6px rgba(255, 87, 83, 0.95)) drop-shadow(0 0 14px rgba(255, 177, 153, 0.6));
+}
 .walker .crumb { opacity: 0; transition: opacity 0.2s; }
+
+/* ---------- Story captions ---------- */
+.story {
+  opacity: 0;
+  transform: translateY(12px);
+  filter: blur(4px);
+  transition: opacity 0.45s ease, transform 0.45s ease, filter 0.45s ease;
+}
+.story.show {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+}
+.brand-wave.glow > span {
+  filter: drop-shadow(0 0 18px rgba(255, 177, 153, 0.95)) drop-shadow(0 0 40px rgba(255, 87, 83, 0.8));
+  transition: filter 0.6s ease;
+}
 .walker.carrying .crumb { opacity: 1; }
 
 /* ---------- Ant colony: trail, nest, food ---------- */
@@ -395,6 +415,8 @@ body {
   .logo-mark { width: 2rem; height: 2rem; }
   main { padding-bottom: 14svh !important; }
   main .mt-6, footer { display: none; }
+  .story { bottom: 0.5rem; }
+  .story p { padding-top: 0.3rem; padding-bottom: 0.3rem; font-size: 0.8rem; }
   .time-label { margin-top: 0; }
 }
 

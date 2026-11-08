@@ -131,6 +131,14 @@
       <!-- ===== Ants Wave: thousands of tiny "ants" moving together as one wave ===== -->
       <canvas id="ant-wave" class="ant-wave pointer-events-none absolute inset-x-0 bottom-0 z-0 w-full" aria-hidden="true"></canvas>
 
+      <!-- Story captions (driven by script.js) -->
+      <div id="story" class="story pointer-events-none absolute inset-x-0 bottom-11 z-20 flex justify-center px-4 sm:bottom-14" aria-live="polite">
+        <p class="inline-flex items-center gap-3 rounded-full border border-white/15 bg-[#1e0646]/60 py-2 pr-5 pl-2 text-sm text-white/90 shadow-lg backdrop-blur-md sm:text-base">
+          <span id="story-step" class="rounded-full bg-gradient-to-r from-brand to-[#8c3ce6] px-2.5 py-0.5 text-[0.7rem] font-semibold tabular-nums">1/5</span>
+          <span id="story-text"></span>
+        </p>
+      </div>
+
       <footer class="reveal absolute inset-x-0 bottom-3 z-10 px-4 text-center text-[0.7rem] text-white/50 sm:bottom-5 sm:text-xs" style="--d: 8">
         <span class="hidden sm:inline">Small ants. Big wave. &nbsp;·&nbsp; </span><span class="hidden sm:inline">Click</span><span class="sm:hidden">Tap</span> anywhere to feed the ants &nbsp;·&nbsp; © 2026 Ants Wave
       </footer>
