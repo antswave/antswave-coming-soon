@@ -1,0 +1,143 @@
+* {
+  margin: 0;
+  padding: 0;
+  font-family: "poppins", sans-serif;
+  box-sizing: border-box;
+  font-family: "Mukti", Arial, sans-serif !important;
+}
+.container {
+  width: 100%;
+  position: fixed;
+  background: transparent;
+}
+.content-wrapper {
+  width: 100%;
+  height: 100vh;
+  background-image: url(../images/background.png);
+  background-position: center;
+  background-size: cover;
+  padding: 0 8%;
+  position: relative;
+}
+.content {
+  top: 50%;
+  position: absolute;
+  transform: translateY(-50%);
+  color: white;
+}
+.content p {
+  font-size: 30px;
+}
+.content h1 {
+  font-size: 54px;
+  font-weight: 600;
+  margin-top: -20px;
+  margin-bottom: -30px;
+}
+.content span {
+  color: #ff5753;
+}
+.content button {
+  background: transparent;
+  border: 2px solid #fff;
+  outline: none;
+  font-size: 20px;
+  padding: 12px 25px;
+  color: white;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 5px;
+}
+.content img {
+  width: 15px;
+  margin-left: 10px;
+}
+.launch-time {
+  display: flex;
+}
+.launch-time div {
+  flex-basis: 70px;
+  margin: 20px;
+}
+.launch-time div p {
+  font-size: 40px;
+  margin-bottom: -12px;
+}
+.launch-time div span {
+  color: white;
+}
+.rocket {
+  width: 200px;
+  position: absolute;
+  right: 10%;
+  bottom: 0;
+  animation: rocket 4s linear infinite;
+}
+@keyframes rocket {
+  0% {
+    bottom: 0;
+    opacity: 0;
+  }
+  100% {
+    bottom: 105%;
+    opacity: 1;
+  }
+}
+
+@media only screen and (max-width: 500px) {
+  .logo img {
+    margin-left: 10px;
+  }
+  .content {
+    top: 40%;
+    position: absolute;
+    transform: translateY(-60%);
+    color: white;
+  }
+  .launch-time div {
+    flex-basis: 20px;
+    margin: 10px;
+  }
+  .launch-time div p {
+    font-size: 30px;
+    margin-bottom: 0px;
+  }
+  .content h1 {
+    font-size: 24px;
+    margin-top: 0px;
+    margin-bottom: -10px;
+  }
+}
+@media only screen and (max-width: 650px) {
+  .content h1 {
+    font-size: 40px;
+    margin-top: 0px;
+    margin-bottom: -10px;
+  }
+}
+@media only screen and (max-width: 400px) {
+  .content h1 {
+    font-size: 24px;
+    margin-top: 0px;
+    margin-bottom: -10px;
+  }
+}
+.launch-time > div > p {
+  margin-bottom: 2px;
+}
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 2px solid #fff;
+  outline: none;
+  font-size: 20px;
+  padding: 12px 25px;
+  color: white;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 5px;
+}
