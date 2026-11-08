@@ -91,11 +91,23 @@ if (!reduceMotion) {
 
 // ===== Mouse spotlight + parallax (pointer devices only) =====
 const page = document.getElementById("page");
-const pointer = { x: -9999, active: false };
+const pointer = { x: -9999, y: -9999, active: false };
+// Taps on touch screens also scare the ants for a moment
+let tapTimer;
+window.addEventListener("pointerdown", (e) => {
+  pointer.x = e.clientX;
+  pointer.y = e.clientY;
+  pointer.active = true;
+  if (e.pointerType !== "mouse") {
+    clearTimeout(tapTimer);
+    tapTimer = setTimeout(() => (pointer.active = false), 700);
+  }
+});
 if (!reduceMotion && window.matchMedia("(hover: hover)").matches) {
   let raf = null;
   window.addEventListener("pointermove", (e) => {
     pointer.x = e.clientX;
+    pointer.y = e.clientY;
     pointer.active = true;
     if (raf) return;
     raf = requestAnimationFrame(() => {
@@ -110,6 +122,111 @@ if (!reduceMotion && window.matchMedia("(hover: hover)").matches) {
   });
   document.addEventListener("pointerleave", () => (pointer.active = false));
 }
+
+// ===== Wandering ants — walk randomly over the whole page, pause, and scurry away from the cursor =====
+(function wanderingAnts() {
+  const box = document.getElementById("ants");
+  if (!box || reduceMotion) return;
+
+  const NS = "http://www.w3.org/2000/svg";
+  const count = window.innerWidth < 640 ? 5 : window.innerWidth < 1100 ? 7 : 10;
+  const rand = (a, b) => a + Math.random() * (b - a);
+  let W = window.innerWidth;
+  let H = window.innerHeight;
+  window.addEventListener("resize", () => {
+    W = window.innerWidth;
+    H = window.innerHeight;
+  });
+
+  const ants = [];
+  for (let i = 0; i < count; i++) {
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 40 30");
+    svg.innerHTML = document.getElementById("ant").innerHTML;
+    svg.setAttribute("class", "walker");
+    const size = rand(16, 26);
+    svg.style.setProperty("--size", size + "px");
+    box.appendChild(svg);
+
+    ants.push({
+      el: svg,
+      x: rand(0.05, 0.95) * W,
+      y: rand(0.05, 0.95) * H,
+      angle: rand(0, Math.PI * 2),
+      turn: 0,
+      baseSpeed: rand(0.5, 1.0) * (size / 22),
+      speed: 0,
+      rest: 0, // frames left resting
+      fear: 0,
+    });
+    setTimeout(() => svg.classList.add("in"), 600 + i * 250);
+  }
+
+  let last = performance.now();
+  function step(now) {
+    const dt = Math.min(3, (now - last) / 16.67); // frame-rate independent
+    last = now;
+
+    for (const a of ants) {
+      // Occasionally stop for a moment, like real ants
+      if (a.rest > 0) {
+        a.rest -= dt;
+        if (a.rest <= 0) a.el.classList.remove("resting");
+      } else if (Math.random() < 0.003 * dt) {
+        a.rest = rand(30, 120);
+        a.el.classList.add("resting");
+      }
+
+      // Random wandering: the turn rate itself drifts smoothly
+      a.turn += rand(-0.02, 0.02) * dt;
+      a.turn = Math.max(-0.06, Math.min(0.06, a.turn)) * 0.97;
+      let desired = a.angle + a.turn * dt;
+
+      // Steer back when near the edges
+      const m = 40;
+      if (a.x < m || a.x > W - m || a.y < m || a.y > H - m) {
+        const toCenter = Math.atan2(H / 2 - a.y, W / 2 - a.x);
+        desired += angleDiff(toCenter, desired) * 0.08 * dt;
+      }
+
+      // Run away from the cursor
+      a.fear = Math.max(0, a.fear - 0.02 * dt);
+      if (pointer.active) {
+        const dx = a.x - pointer.x;
+        const dy = a.y - pointer.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 110) {
+          const away = Math.atan2(dy, dx);
+          desired += angleDiff(away, desired) * 0.25;
+          a.fear = 1;
+          a.rest = 0;
+          a.el.classList.remove("resting");
+        }
+      }
+
+      a.angle = desired;
+      const target = a.rest > 0 ? 0 : a.baseSpeed * (1 + a.fear * 2.5);
+      a.speed += (target - a.speed) * 0.15;
+      a.x += Math.cos(a.angle) * a.speed * dt;
+      a.y += Math.sin(a.angle) * a.speed * dt;
+      a.x = Math.max(-10, Math.min(W + 10, a.x));
+      a.y = Math.max(-10, Math.min(H + 10, a.y));
+
+      a.el.style.setProperty("--step", (0.28 / Math.max(0.6, a.speed)).toFixed(2) + "s");
+      a.el.style.transform = `translate(${a.x.toFixed(1)}px, ${a.y.toFixed(1)}px) rotate(${a.angle.toFixed(3)}rad)`;
+    }
+    requestAnimationFrame(step);
+  }
+
+  function angleDiff(a, b) {
+    let d = a - b;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    return d;
+  }
+
+  requestAnimationFrame(step);
+})();
 
 // ===== Ants Wave — a 3D field of tiny "ants" (particles) moving as one wave =====
 (function antWave() {

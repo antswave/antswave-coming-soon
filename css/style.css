@@ -128,16 +128,88 @@ body {
   to   { opacity: 1; transform: none; filter: blur(0); }
 }
 
-/* ---------- Header ---------- */
-.logo-mark {
-  background: linear-gradient(135deg, var(--brand), var(--violet));
-  box-shadow: 0 8px 24px -8px rgba(255, 87, 83, 0.8);
-  animation: logo-float 4s ease-in-out infinite;
+/* ---------- Wandering ants ---------- */
+.walker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--size, 22px);
+  aspect-ratio: 40 / 30;
+  margin: calc(var(--size, 22px) * -0.375) 0 0 calc(var(--size, 22px) * -0.5);
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5)) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.35));
+  will-change: transform;
+  opacity: 0;
+  transition: opacity 1.2s ease;
 }
-@keyframes logo-float {
-  0%, 100% { transform: translateY(0) rotate(0); }
-  50%      { transform: translateY(-3px) rotate(-6deg); }
+.walker.in { opacity: 1; }
+.walker .legs-a { animation: legs var(--step, 0.22s) steps(1) infinite; }
+.walker .legs-b { animation: legs var(--step, 0.22s) steps(1) infinite reverse; }
+.walker.resting .legs-a,
+.walker.resting .legs-b { animation-play-state: paused; }
+@keyframes legs {
+  0%  { opacity: 1; }
+  50% { opacity: 0; }
 }
+.walker .crumb { opacity: 0; transition: opacity 0.2s; }
+.walker.carrying .crumb { opacity: 1; }
+
+/* ---------- Ant colony: trail, nest, food ---------- */
+.trail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.nest {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 44px;
+  height: 26px;
+  margin: -13px 0 0 -22px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, #0b011d 0 32%, rgba(255, 255, 255, 0.22) 38% 52%, rgba(255, 255, 255, 0.06) 62%, transparent 72%);
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.nest.in { opacity: 1; }
+.nest::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 177, 153, 0.9);
+  opacity: 0;
+}
+.nest.fed::after { animation: nest-pulse 0.8s ease-out; }
+@keyframes nest-pulse {
+  from { opacity: 1; transform: scale(0.6); }
+  to   { opacity: 0; transform: scale(2.2); }
+}
+
+.food {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  transition: opacity 0.4s ease;
+}
+.food.gone { opacity: 0; }
+.food span {
+  position: absolute;
+  width: var(--s);
+  height: var(--s);
+  left: calc(var(--s) / -2);
+  top: calc(var(--s) / -2);
+  translate: var(--cx) var(--cy);
+  border-radius: 40%;
+  background: radial-gradient(circle at 35% 35%, #fff, #ffd2c2 55%, #ff8a6e);
+  box-shadow: 0 0 8px rgba(255, 140, 110, 0.7);
+  animation: crumb-in 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) backwards;
+  animation-delay: var(--dl, 0s);
+}
+@keyframes crumb-in { from { scale: 0; } }
 
 /* ---------- Badge ---------- */
 .badge {
