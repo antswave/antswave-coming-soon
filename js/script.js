@@ -92,17 +92,6 @@ if (!reduceMotion) {
 // ===== Mouse spotlight + parallax (pointer devices only) =====
 const page = document.getElementById("page");
 const pointer = { x: -9999, y: -9999, active: false };
-// Taps on touch screens also scare the ants for a moment
-let tapTimer;
-window.addEventListener("pointerdown", (e) => {
-  pointer.x = e.clientX;
-  pointer.y = e.clientY;
-  pointer.active = true;
-  if (e.pointerType !== "mouse") {
-    clearTimeout(tapTimer);
-    tapTimer = setTimeout(() => (pointer.active = false), 700);
-  }
-});
 if (!reduceMotion && window.matchMedia("(hover: hover)").matches) {
   let raf = null;
   window.addEventListener("pointermove", (e) => {
@@ -123,107 +112,275 @@ if (!reduceMotion && window.matchMedia("(hover: hover)").matches) {
   document.addEventListener("pointerleave", () => (pointer.active = false));
 }
 
-// ===== Wandering ants — walk randomly over the whole page, pause, and scurry away from the cursor =====
-(function wanderingAnts() {
+// ===== Ant colony — ants wander, find food, carry crumbs home to the nest =====
+(function antColony() {
   const box = document.getElementById("ants");
   if (!box || reduceMotion) return;
 
   const NS = "http://www.w3.org/2000/svg";
-  const count = window.innerWidth < 640 ? 5 : window.innerWidth < 1100 ? 7 : 10;
   const rand = (a, b) => a + Math.random() * (b - a);
+  const TAU = Math.PI * 2;
   let W = window.innerWidth;
   let H = window.innerHeight;
-  window.addEventListener("resize", () => {
-    W = window.innerWidth;
-    H = window.innerHeight;
-  });
+  const small = W < 640;
+  const ANT_COUNT = small ? 6 : W < 1100 ? 9 : 12;
+  const MAX_FOOD = small ? 3 : 4;
 
+  // --- Pheromone trail (canvas under the ants) ---
+  const trail = document.createElement("canvas");
+  trail.className = "trail";
+  box.appendChild(trail);
+  const tctx = trail.getContext("2d");
+  const trailDots = []; // {x, y, life}
+  function sizeTrail() {
+    const d = Math.min(window.devicePixelRatio || 1, 2);
+    trail.width = Math.round(W * d);
+    trail.height = Math.round(H * d);
+    tctx.setTransform(d, 0, 0, d, 0, 0);
+  }
+
+  // --- Nest ---
+  const nest = { x: 0, y: 0, el: document.createElement("div") };
+  nest.el.className = "nest";
+  box.appendChild(nest.el);
+  function placeNest() {
+    nest.x = small ? 42 : Math.max(60, W * 0.06);
+    nest.y = H - (small ? 64 : 78);
+    nest.el.style.transform = `translate(${nest.x}px, ${nest.y}px)`;
+  }
+  setTimeout(() => nest.el.classList.add("in"), 500);
+
+  // --- Keep auto-spawned food away from the text & countdown ---
+  let contentRects = [];
+  function measure() {
+    contentRects = [...document.querySelectorAll("main > *, header > *")].map((e) => e.getBoundingClientRect());
+  }
+  const blocked = (x, y) =>
+    contentRects.some((r) => x > r.left - 24 && x < r.right + 24 && y > r.top - 24 && y < r.bottom + 24);
+
+  // --- Food ---
+  const foods = [];
+  function addFood(x, y) {
+    if (x == null) {
+      let tries = 0;
+      do {
+        x = rand(40, W - 40);
+        y = rand(70, H - 50);
+        tries++;
+      } while ((blocked(x, y) || Math.hypot(x - nest.x, y - nest.y) < Math.min(W, H) * 0.3) && tries < 40);
+    }
+    const el = document.createElement("div");
+    el.className = "food";
+    el.style.transform = `translate(${x}px, ${y}px)`;
+    const amount = Math.round(rand(5, 8));
+    for (let i = 0; i < amount; i++) {
+      const c = document.createElement("span");
+      c.style.cssText = `--cx:${rand(-7, 7).toFixed(1)}px;--cy:${rand(-6, 6).toFixed(1)}px;--s:${rand(4, 7).toFixed(1)}px;--dl:${(i * 0.05).toFixed(2)}s`;
+      el.appendChild(c);
+    }
+    box.appendChild(el);
+    foods.push({ x, y, amount, el });
+    // Too much food on screen? Remove the oldest pile.
+    if (foods.length > MAX_FOOD + 2) removeFood(foods[0]);
+  }
+  function removeFood(f) {
+    const i = foods.indexOf(f);
+    if (i !== -1) foods.splice(i, 1);
+    f.amount = 0;
+    f.el.classList.add("gone");
+    setTimeout(() => f.el.remove(), 450);
+  }
+  function biteFood(f) {
+    f.amount--;
+    f.el.lastElementChild?.remove();
+    if (f.amount <= 0) removeFood(f);
+  }
+
+  // --- Ants ---
   const ants = [];
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < ANT_COUNT; i++) {
     const svg = document.createElementNS(NS, "svg");
     svg.setAttribute("viewBox", "0 0 40 30");
     svg.innerHTML = document.getElementById("ant").innerHTML;
     svg.setAttribute("class", "walker");
-    const size = rand(16, 26);
+    const size = rand(16, 24);
     svg.style.setProperty("--size", size + "px");
     box.appendChild(svg);
-
     ants.push({
       el: svg,
       x: rand(0.05, 0.95) * W,
       y: rand(0.05, 0.95) * H,
-      angle: rand(0, Math.PI * 2),
+      angle: rand(0, TAU),
       turn: 0,
-      baseSpeed: rand(0.5, 1.0) * (size / 22),
+      baseSpeed: rand(0.6, 1.05) * (size / 20),
       speed: 0,
-      rest: 0, // frames left resting
+      rest: 0,
       fear: 0,
+      state: "wander", // wander | seek | carry
+      target: null,
+      drop: 0,
     });
-    setTimeout(() => svg.classList.add("in"), 600 + i * 250);
+    setTimeout(() => svg.classList.add("in"), 600 + i * 200);
+  }
+
+  function setRest(a, frames) {
+    a.rest = frames;
+    a.el.classList.toggle("resting", frames > 0);
+  }
+  function angleDiff(a, b) {
+    let d = (a - b) % TAU;
+    if (d > Math.PI) d -= TAU;
+    if (d < -Math.PI) d += TAU;
+    return d;
+  }
+  function nearestFood(a, radius) {
+    let best = null;
+    let bd = radius;
+    for (const f of foods) {
+      const d = Math.hypot(f.x - a.x, f.y - a.y);
+      if (d < bd) {
+        bd = d;
+        best = f;
+      }
+    }
+    return best;
   }
 
   let last = performance.now();
   function step(now) {
-    const dt = Math.min(3, (now - last) / 16.67); // frame-rate independent
+    const dt = Math.min(3, (now - last) / 16.67);
     last = now;
+    const sense = Math.max(W, H) * 0.5;
 
     for (const a of ants) {
-      // Occasionally stop for a moment, like real ants
       if (a.rest > 0) {
         a.rest -= dt;
-        if (a.rest <= 0) a.el.classList.remove("resting");
-      } else if (Math.random() < 0.003 * dt) {
-        a.rest = rand(30, 120);
-        a.el.classList.add("resting");
+        if (a.rest <= 0) setRest(a, 0);
       }
 
-      // Random wandering: the turn rate itself drifts smoothly
+      // Natural wiggle
       a.turn += rand(-0.02, 0.02) * dt;
       a.turn = Math.max(-0.06, Math.min(0.06, a.turn)) * 0.97;
-      let desired = a.angle + a.turn * dt;
+      let desired = a.angle + a.turn * dt * (a.state === "wander" ? 1 : 0.5);
 
-      // Steer back when near the edges
-      const m = 40;
-      if (a.x < m || a.x > W - m || a.y < m || a.y > H - m) {
-        const toCenter = Math.atan2(H / 2 - a.y, W / 2 - a.x);
-        desired += angleDiff(toCenter, desired) * 0.08 * dt;
+      if (a.state === "wander") {
+        if (a.rest <= 0 && Math.random() < 0.002 * dt) setRest(a, rand(30, 100));
+        if (Math.random() < 0.02 * dt) {
+          const f = nearestFood(a, sense);
+          if (f) {
+            a.state = "seek";
+            a.target = f;
+          }
+        }
+      } else if (a.state === "seek") {
+        const f = a.target;
+        if (!f || f.amount <= 0) {
+          a.state = "wander";
+          a.target = null;
+        } else {
+          const d = Math.hypot(f.x - a.x, f.y - a.y);
+          desired += angleDiff(Math.atan2(f.y - a.y, f.x - a.x), desired) * 0.12 * dt;
+          if (d < 8) {
+            biteFood(f);
+            a.state = "carry";
+            a.target = null;
+            a.el.classList.add("carrying");
+            setRest(a, 18); // pause to pick it up
+          }
+        }
+      } else if (a.state === "carry") {
+        const d = Math.hypot(nest.x - a.x, nest.y - a.y);
+        desired += angleDiff(Math.atan2(nest.y - a.y, nest.x - a.x), desired) * 0.1 * dt;
+        // leave a pheromone trail
+        a.drop -= dt;
+        if (a.drop <= 0 && a.speed > 0.2) {
+          trailDots.push({ x: a.x - Math.cos(a.angle) * 6, y: a.y - Math.sin(a.angle) * 6, life: 1 });
+          a.drop = 5;
+        }
+        if (d < 10) {
+          a.state = "wander";
+          a.el.classList.remove("carrying");
+          nest.el.classList.remove("fed");
+          void nest.el.offsetWidth;
+          nest.el.classList.add("fed");
+          a.angle += Math.PI + rand(-0.8, 0.8); // turn around, head back out
+          desired = a.angle;
+          setRest(a, 20);
+        }
       }
 
-      // Run away from the cursor
+      // Steer back from the edges
+      const m = 30;
+      if (a.x < m || a.x > W - m || a.y < m || a.y > H - m) {
+        desired += angleDiff(Math.atan2(H / 2 - a.y, W / 2 - a.x), desired) * 0.08 * dt;
+      }
+
+      // Scurry away from the mouse cursor
       a.fear = Math.max(0, a.fear - 0.02 * dt);
       if (pointer.active) {
         const dx = a.x - pointer.x;
         const dy = a.y - pointer.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < 110) {
-          const away = Math.atan2(dy, dx);
-          desired += angleDiff(away, desired) * 0.25;
+        if (dx * dx + dy * dy < 90 * 90) {
+          desired += angleDiff(Math.atan2(dy, dx), desired) * 0.25;
           a.fear = 1;
-          a.rest = 0;
-          a.el.classList.remove("resting");
+          if (a.rest > 0) setRest(a, 0);
         }
       }
 
-      a.angle = desired;
-      const target = a.rest > 0 ? 0 : a.baseSpeed * (1 + a.fear * 2.5);
+      a.angle = desired % TAU;
+      const busy = a.state !== "wander" ? 1.15 : 1;
+      const target = a.rest > 0 ? 0 : a.baseSpeed * busy * (1 + a.fear * 2.5);
       a.speed += (target - a.speed) * 0.15;
-      a.x += Math.cos(a.angle) * a.speed * dt;
-      a.y += Math.sin(a.angle) * a.speed * dt;
-      a.x = Math.max(-10, Math.min(W + 10, a.x));
-      a.y = Math.max(-10, Math.min(H + 10, a.y));
+      a.x = Math.max(-10, Math.min(W + 10, a.x + Math.cos(a.angle) * a.speed * dt));
+      a.y = Math.max(-10, Math.min(H + 10, a.y + Math.sin(a.angle) * a.speed * dt));
 
-      a.el.style.setProperty("--step", (0.28 / Math.max(0.6, a.speed)).toFixed(2) + "s");
+      a.el.style.setProperty("--step", (0.26 / Math.max(0.6, a.speed)).toFixed(2) + "s");
       a.el.style.transform = `translate(${a.x.toFixed(1)}px, ${a.y.toFixed(1)}px) rotate(${a.angle.toFixed(3)}rad)`;
     }
+
+    // Draw & fade the trail
+    tctx.clearRect(0, 0, W, H);
+    for (let i = trailDots.length - 1; i >= 0; i--) {
+      const p = trailDots[i];
+      p.life -= 0.004 * dt;
+      if (p.life <= 0) {
+        trailDots.splice(i, 1);
+        continue;
+      }
+      tctx.fillStyle = `rgba(255, 210, 194, ${(p.life * 0.45).toFixed(3)})`;
+      tctx.beginPath();
+      tctx.arc(p.x, p.y, 1.4, 0, TAU);
+      tctx.fill();
+    }
+
     requestAnimationFrame(step);
   }
 
-  function angleDiff(a, b) {
-    let d = a - b;
-    while (d > Math.PI) d -= Math.PI * 2;
-    while (d < -Math.PI) d += Math.PI * 2;
-    return d;
+  // Click / tap anywhere (except buttons & links) to drop food
+  window.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("button, a")) return;
+    addFood(e.clientX, e.clientY);
+  });
+
+  // Food keeps appearing on its own
+  setInterval(() => {
+    if (!document.hidden && foods.length < MAX_FOOD) addFood();
+  }, 4500);
+
+  function layout() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    sizeTrail();
+    placeNest();
+    measure();
   }
+  layout();
+  window.addEventListener("resize", layout);
+  setTimeout(() => {
+    measure(); // after entrance animations settle
+    addFood();
+    addFood();
+  }, 1600);
 
   requestAnimationFrame(step);
 })();
