@@ -1,0 +1,11 @@
+{
+  "name": "Ants Wave",
+  "short_name": "Ants Wave",
+  "icons": [
+    { "src": "images/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "images/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "theme_color": "#14101F",
+  "background_color": "#14101F",
+  "display": "standalone"
+}
