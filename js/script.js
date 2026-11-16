@@ -366,7 +366,7 @@ const colony = (function antColony() {
         trailDots.splice(i, 1);
         continue;
       }
-      tctx.fillStyle = `rgba(255, 210, 194, ${(p.life * 0.45).toFixed(3)})`;
+      tctx.fillStyle = `rgba(255, 210, 122, ${(p.life * 0.4).toFixed(3)})`;
       tctx.beginPath();
       tctx.arc(p.x, p.y, 1.4, 0, TAU);
       tctx.fill();
@@ -428,8 +428,8 @@ const colony = (function antColony() {
     "One small ant sets out to explore…",
     "It finds something worth sharing.",
     "Soon, the whole colony joins in.",
-    "Together, small ants make a big wave.",
-    "Ants Wave — launching 1 Dec 2026.",
+    "Small ants. Big wave.",
+    "Ants Wave launches on 1 Dec 2026.",
   ];
   const { story, ants } = colony;
   let timers = [];
@@ -527,9 +527,9 @@ const colony = (function antColony() {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
 
-  const CORAL = [255, 87, 83];
-  const PEACH = [255, 177, 153];
-  const VIOLET = [168, 100, 255];
+  const AMBER = [255, 176, 32];
+  const TEAL = [60, 192, 216];
+  const VIOLET = [155, 116, 242];
 
   let w, h, dpr, cols, rows;
   let bump = 0; // eased pointer influence
@@ -601,7 +601,7 @@ const colony = (function antColony() {
         const y = height(u, p, t, flat.x);
         const pt = project(u, p, y);
         const crest = Math.min(1, Math.max(0, (y + 0.4) / 0.9));
-        const col = mixColor(mixColor(VIOLET, CORAL, (u + 1) / 2), PEACH, crest * 0.6);
+        const col = mixColor(mixColor(VIOLET, TEAL, (u + 1) / 2), AMBER, Math.min(1, crest * 1.1));
         const size = Math.max(0.6, pt.s * 3.2 * (0.7 + crest * 0.6));
         ctx.fillStyle = `rgba(${col[0] | 0},${col[1] | 0},${col[2] | 0},${depthAlpha * (0.55 + crest * 0.45)})`;
         ctx.beginPath();
@@ -627,12 +627,12 @@ const colony = (function antColony() {
       for (let i = 0; i < a.trail.length; i++) {
         const q = a.trail[i];
         const k = i / a.trail.length;
-        ctx.fillStyle = `rgba(255,${(150 + k * 80) | 0},${(140 + k * 60) | 0},${k * 0.5})`;
+        ctx.fillStyle = `rgba(255,${(176 + k * 34) | 0},${(32 + k * 90) | 0},${k * 0.5})`;
         ctx.beginPath();
         ctx.arc(q.x, q.y, pt.s * 3 * k + 0.5, 0, Math.PI * 2);
         ctx.fill();
       }
-      ctx.shadowColor = "rgba(255,87,83,0.9)";
+      ctx.shadowColor = "rgba(255,176,32,0.9)";
       ctx.shadowBlur = 12;
       ctx.fillStyle = "#fff";
       ctx.beginPath();

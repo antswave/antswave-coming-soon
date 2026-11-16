@@ -67,7 +67,7 @@ jobs:
       - name: Prepare site
         run: |
           mkdir _site
-          cp -r index.html css js images _site/
+          cp -r index.html favicon.ico site.webmanifest css js images _site/
           touch _site/.nojekyll
 
       - uses: actions/upload-pages-artifact@v3

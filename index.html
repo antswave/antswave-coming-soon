@@ -3,22 +3,49 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#2a0560" />
-    <meta name="description" content="Ants Wave — আসছে খুব শীঘ্রই. Our new website is launching soon." />
-    <title>Ants Wave — Coming Soon</title>
+    <meta name="theme-color" content="#14101F" />
+    <meta name="description" content="Ants Wave is launching soon. Small ants. Big wave. আসছে খুব শীঘ্রই।" />
+    <title>Ants Wave | Coming soon</title>
+    <link rel="canonical" href="https://antswave.com/" />
+
+    <link rel="icon" href="./favicon.ico" sizes="48x48" />
+    <link rel="icon" href="./images/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./images/apple-touch-icon.png" />
+    <link rel="manifest" href="./site.webmanifest" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ants Wave" />
+    <meta property="og:title" content="Ants Wave | Coming soon" />
+    <meta property="og:description" content="Small ants. Big wave. Our new website launches on 1 December 2026." />
+    <meta property="og:url" content="https://antswave.com/" />
+    <meta property="og:image" content="https://antswave.com/images/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Ants Wave | Coming soon" />
+    <meta name="twitter:description" content="Small ants. Big wave. Our new website launches on 1 December 2026." />
+    <meta name="twitter:image" content="https://antswave.com/images/og-image.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.maateen.me/mukti/font.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;600;700&family=Anek+Latin:wght@500;600;700;800&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet" />
 
     <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
-            colors: { brand: { DEFAULT: "#ff5753", deep: "#2a0560", mid: "#4a0a9c" } },
-            fontFamily: { sans: ["Poppins", "Mukti", "Arial", "sans-serif"], bn: ["Mukti", "Poppins", "sans-serif"] },
+            colors: {
+              amber: { 50: "#fff8eb", 100: "#fff1d6", 300: "#ffd27a", 500: "#ffb020", 700: "#8f5400" },
+              violet: { 50: "#f4f0fe", 200: "#d6c7fa", 400: "#9b74f2", 600: "#6325d9", 700: "#4a12a8", 900: "#2a0560", 950: "#17023a" },
+              teal: { 100: "#d8f1f6", 400: "#3cc0d8", 700: "#0e7490" },
+              ink: { DEFAULT: "#14101f", 800: "#241f33", 700: "#4a4558", 500: "#6f6a80", 300: "#c9c4d6" },
+            },
+            fontFamily: {
+              sans: ["Hind Siliguri", "Anek Bangla", "Arial", "sans-serif"],
+              display: ["Anek Latin", "Anek Bangla", "Arial", "sans-serif"],
+              bn: ["Anek Bangla", "Hind Siliguri", "sans-serif"],
+            },
           },
         },
       };
@@ -26,15 +53,10 @@
     <link rel="stylesheet" href="./css/style.css" />
   </head>
 
-  <body class="bg-brand-deep font-sans text-white antialiased">
+  <body class="bg-ink font-sans text-white antialiased">
     <div id="page" class="page relative isolate flex flex-col overflow-hidden">
       <!-- ===== Animated background ===== -->
       <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-        <div class="parallax-layer" style="--depth: 30">
-          <div class="orb orb-1"></div>
-          <div class="orb orb-2"></div>
-          <div class="orb orb-3"></div>
-        </div>
         <div class="grid-overlay"></div>
         <div id="stars" class="parallax-layer" style="--depth: 12"></div>
         <div class="spotlight"></div>
@@ -42,30 +64,30 @@
 
       <!-- ===== Header ===== -->
       <header class="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between px-4 pt-5 sm:px-8 lg:px-[8%]">
-        <a href="./" class="reveal text-xl font-semibold tracking-tight" style="--d: 0" aria-label="Ants Wave home">
-          Ants<span class="text-brand">Wave</span>
+        <a href="./" class="reveal logo" style="--d: 0" aria-label="Ants Wave home">
+          <img src="./images/logo-horizontal-reversed.svg" alt="Ants Wave" width="268" height="64" class="h-9 w-auto sm:h-10" />
         </a>
-        <p class="reveal hidden items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-sm text-white/80 backdrop-blur-md sm:flex" style="--d: 1">
-          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 11h18" /></svg>
+        <p class="reveal hidden items-center gap-2 rounded-full border border-white/15 bg-ink-800/70 px-4 py-1.5 font-display text-sm font-medium text-white/85 backdrop-blur-md sm:flex" style="--d: 1">
+          <svg class="h-4 w-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 11h18" /></svg>
           Launch: 1 Dec 2026
         </p>
       </header>
 
       <!-- ===== Hero ===== -->
       <main class="relative z-10 mx-auto flex w-full max-w-7xl min-h-0 flex-1 flex-col items-center justify-center px-4 pt-6 pb-[26svh] text-center sm:px-8 lg:px-[8%]">
-        <p class="reveal badge mb-5 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[0.7rem] font-medium tracking-[0.25em] uppercase sm:text-xs" style="--d: 1">
-          <span class="pulse-dot h-2 w-2 rounded-full bg-brand"></span>
+        <p class="reveal badge mb-5 inline-flex items-center gap-2 rounded-full px-4 py-1.5 font-display text-xs font-medium tracking-[0.04em] sm:text-sm" style="--d: 1">
+          <span class="pulse-dot h-2 w-2 rounded-full bg-amber-500"></span>
           Something big is coming
         </p>
 
-        <h1 class="reveal text-[clamp(1.9rem,min(8vw,9svh),5rem)] leading-[1.1] font-semibold tracking-tight" style="--d: 2">
+        <h1 class="reveal font-display text-[clamp(1.9rem,min(8vw,9svh),4.5rem)] leading-[1.05] font-bold tracking-[-0.02em]" style="--d: 2">
           <span class="split-words">Welcome to</span>
           <span class="brand-wave block whitespace-nowrap sm:inline" aria-label="Ants Wave">
             <span aria-hidden="true" style="--i: 0">A</span><span aria-hidden="true" style="--i: 1">n</span><span aria-hidden="true" style="--i: 2">t</span><span aria-hidden="true" style="--i: 3">s</span><span aria-hidden="true" style="--i: 4">&nbsp;</span><span aria-hidden="true" style="--i: 5">W</span><span aria-hidden="true" style="--i: 6">a</span><span aria-hidden="true" style="--i: 7">v</span><span aria-hidden="true" style="--i: 8">e</span>
           </span>
         </h1>
 
-        <p class="reveal mt-4 font-bn text-[clamp(1.2rem,min(4.5vw,6svh),2rem)] text-white/85" style="--d: 3">
+        <p class="reveal mt-4 font-bn text-[clamp(1.2rem,min(4.5vw,6svh),2rem)] font-semibold text-white/85" style="--d: 3">
           আসছে খুব শীঘ্রই<span class="typing-dots"><span>.</span><span>.</span><span>.</span></span>
         </p>
 
@@ -99,11 +121,11 @@
         <button
           id="status-btn"
           type="button"
-          class="reveal cta group mt-9 inline-flex items-center gap-3 rounded-full px-7 py-3.5 text-base font-medium sm:text-lg"
+          class="reveal cta group mt-9 inline-flex items-center gap-3 rounded-full px-7 py-3.5 font-display text-base font-semibold tracking-[0.01em] sm:text-lg"
           style="--d: 7"
         >
           <span id="status-text">Just a few days left</span>
-          <img src="images/triangle.png" alt="" class="w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+          <svg class="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
         </button>
       </main>
 
@@ -121,7 +143,7 @@
           <ellipse cx="19" cy="15" rx="4.5" ry="3" fill="#ffffff" />
           <circle cx="28" cy="15" r="4" fill="#ffffff" />
           <!-- food crumb carried in the jaws -->
-          <circle class="crumb" cx="35.5" cy="15" r="3.6" fill="#ffb199" />
+          <circle class="crumb" cx="35.5" cy="15" r="3.6" fill="#ffb020" />
         </symbol>
       </svg>
 
@@ -133,13 +155,13 @@
 
       <!-- Story captions (driven by script.js) -->
       <div id="story" class="story pointer-events-none absolute inset-x-0 bottom-11 z-20 flex justify-center px-4 sm:bottom-14" aria-live="polite">
-        <p class="inline-flex items-center gap-3 rounded-full border border-white/15 bg-[#1e0646]/60 py-2 pr-5 pl-2 text-sm text-white/90 shadow-lg backdrop-blur-md sm:text-base">
-          <span id="story-step" class="rounded-full bg-gradient-to-r from-brand to-[#8c3ce6] px-2.5 py-0.5 text-[0.7rem] font-semibold tabular-nums">1/5</span>
+        <p class="inline-flex items-center gap-3 rounded-full border border-white/15 bg-ink-800/80 py-2 pr-5 pl-2 text-sm text-white/90 shadow-lg backdrop-blur-md sm:text-base">
+          <span id="story-step" class="rounded-full bg-amber-500 px-2.5 py-0.5 font-display text-[0.7rem] font-semibold text-ink tabular-nums">1/5</span>
           <span id="story-text"></span>
         </p>
       </div>
 
-      <footer class="reveal absolute inset-x-0 bottom-3 z-10 px-4 text-center text-[0.7rem] text-white/50 sm:bottom-5 sm:text-xs" style="--d: 8">
+      <footer class="reveal absolute inset-x-0 bottom-3 z-10 px-4 text-center text-[0.7rem] text-white/60 sm:bottom-5 sm:text-xs" style="--d: 8">
         <span class="hidden sm:inline">Small ants. Big wave. &nbsp;·&nbsp; </span><span class="hidden sm:inline">Click</span><span class="sm:hidden">Tap</span> anywhere to feed the ants &nbsp;·&nbsp; © 2026 Ants Wave
       </footer>
     </div>
